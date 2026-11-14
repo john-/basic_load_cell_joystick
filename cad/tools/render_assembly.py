@@ -50,15 +50,51 @@ def render_upright_isometric(tmp_dir, output_dir):
     """Uses VTK to render a strictly upright isometric perspective."""
     import vtk
 
-    color_map = {
-        "BaseDisk": (0.75, 0.76, 0.78),           # Brushed aluminum base plate
-        "TopPlate": (0.75, 0.76, 0.78),           # Brushed aluminum top plate
-        "Standoff": (0.85, 0.72, 0.35),           # Brass / hex standoffs
-        "LoadCell": (0.58, 0.62, 0.66),           # Anodized aluminum load cells
-        "GripHybrid_Half_A": (0.34, 0.35, 0.37),  # Medium charcoal gray PLA (shows contours & seam)
-        "GripHybrid_Half_B": (0.38, 0.39, 0.41),  # Slightly lighter contrasting half
-        "ThumbPlate_Joystick": (0.52, 0.54, 0.56),# Neutral slate gray PLA thumbplate
-        "Mini_Joystick": (0.12, 0.42, 0.82),      # Blue breakout PCB
+    # Material and color properties for high visual fidelity
+    material_map = {
+        "BaseDisk": {
+            "color": (0.75, 0.76, 0.78),
+            "ambient": 0.25, "diffuse": 0.75, "specular": 0.35, "specular_power": 30.0
+        },
+        "TopPlate": {
+            "color": (0.75, 0.76, 0.78),
+            "ambient": 0.25, "diffuse": 0.75, "specular": 0.35, "specular_power": 30.0
+        },
+        "Standoff": {
+            "color": (0.85, 0.72, 0.35),
+            "ambient": 0.30, "diffuse": 0.70, "specular": 0.60, "specular_power": 45.0
+        },
+        "LoadCell": {
+            "color": (0.58, 0.62, 0.66),
+            "ambient": 0.25, "diffuse": 0.75, "specular": 0.30, "specular_power": 25.0
+        },
+        "GripHybrid_Half_A": {
+            "color": (0.32, 0.33, 0.35),
+            "ambient": 0.25, "diffuse": 0.75, "specular": 0.15, "specular_power": 15.0
+        },
+        "GripHybrid_Half_B": {
+            "color": (0.36, 0.37, 0.39),
+            "ambient": 0.25, "diffuse": 0.75, "specular": 0.15, "specular_power": 15.0
+        },
+        "ThumbPlate_Joystick": {
+            "color": (0.50, 0.52, 0.54),
+            "ambient": 0.25, "diffuse": 0.75, "specular": 0.20, "specular_power": 20.0
+        },
+        "Mini_Joystick_Cap": {
+            # Soft-touch matte black / charcoal silicone thumbstick cap with low specular
+            "color": (0.16, 0.16, 0.17),
+            "ambient": 0.20, "diffuse": 0.80, "specular": 0.10, "specular_power": 10.0
+        },
+        "Mini_Joystick_Breakout": {
+            # Adafruit STEMMA blue PCB
+            "color": (0.10, 0.45, 0.85),
+            "ambient": 0.25, "diffuse": 0.75, "specular": 0.25, "specular_power": 25.0
+        },
+        "Button_": {
+            # Polished chrome / stainless steel metal pushbutton with high specular reflection
+            "color": (0.88, 0.89, 0.92),
+            "ambient": 0.20, "diffuse": 0.65, "specular": 0.85, "specular_power": 75.0
+        },
     }
 
     stl_files = sorted(glob.glob(os.path.join(tmp_dir, "part_*.stl")))
@@ -86,17 +122,21 @@ def render_upright_isometric(tmp_dir, output_dir):
         actor = vtk.vtkActor()
         actor.SetMapper(mapper)
 
-        color = (0.7, 0.7, 0.7)
-        for key, c in color_map.items():
+        # Match exact material entry
+        mat = {
+            "color": (0.7, 0.7, 0.7),
+            "ambient": 0.25, "diffuse": 0.75, "specular": 0.25, "specular_power": 25.0
+        }
+        for key, m in material_map.items():
             if key in basename:
-                color = c
+                mat = m
                 break
 
-        actor.GetProperty().SetColor(*color)
-        actor.GetProperty().SetAmbient(0.25)
-        actor.GetProperty().SetDiffuse(0.75)
-        actor.GetProperty().SetSpecular(0.25)
-        actor.GetProperty().SetSpecularPower(25.0)
+        actor.GetProperty().SetColor(*mat["color"])
+        actor.GetProperty().SetAmbient(mat["ambient"])
+        actor.GetProperty().SetDiffuse(mat["diffuse"])
+        actor.GetProperty().SetSpecular(mat["specular"])
+        actor.GetProperty().SetSpecularPower(mat["specular_power"])
         renderer.AddActor(actor)
 
     renderWindow = vtk.vtkRenderWindow()
@@ -123,6 +163,44 @@ def render_upright_isometric(tmp_dir, output_dir):
     writer.SetInputConnection(windowToImageFilter.GetOutputPort())
     writer.Write()
     print(f"  Rendered upright isometric view: {out_path} ({os.path.getsize(out_path)/1024:.1f} KB)")
+
+    # 3. Close-up view of Grip Head & Thumbplate Controls
+    camera.SetFocalPoint(3.0, 10.0, 195.0)
+    camera.SetPosition(90.0, -90.0, 270.0)
+    camera.SetViewUp(0.0, 0.0, 1.0)
+    renderer.ResetCameraClippingRange()
+
+    renderWindow.Render()
+
+    windowToImageFilter2 = vtk.vtkWindowToImageFilter()
+    windowToImageFilter2.SetInput(renderWindow)
+    windowToImageFilter2.Update()
+
+    detail_path = os.path.join(output_dir, "assembly_head_detail.png")
+    writer.SetFileName(detail_path)
+    writer.SetInputConnection(windowToImageFilter2.GetOutputPort())
+    writer.Write()
+    print(f"  Rendered head controls detail view: {detail_path} ({os.path.getsize(detail_path)/1024:.1f} KB)")
+
+    # 4. Rear-quarter isometric view highlighting trigger button on Half A
+    # Trigger is at X=12.58, Y=8.82, Z=146.7 pointing radially outward toward (+X, +Y).
+    # Viewing from rear quarter (+X, +Y, +Z)
+    camera.SetFocalPoint(0.0, 0.0, 110.0)
+    camera.SetPosition(380.0, 360.0, 240.0)
+    camera.SetViewUp(0.0, 0.0, 1.0)
+    renderer.ResetCameraClippingRange()
+
+    renderWindow.Render()
+
+    windowToImageFilter3 = vtk.vtkWindowToImageFilter()
+    windowToImageFilter3.SetInput(renderWindow)
+    windowToImageFilter3.Update()
+
+    rear_path = os.path.join(output_dir, "assembly_rear_isometric.png")
+    writer.SetFileName(rear_path)
+    writer.SetInputConnection(windowToImageFilter3.GetOutputPort())
+    writer.Write()
+    print(f"  Rendered rear-quarter isometric view: {rear_path} ({os.path.getsize(rear_path)/1024:.1f} KB)")
 
 
 def main():

@@ -226,6 +226,8 @@ def build_grip_hybrid_minijoy_assembly(repo_root):
     COLOR_PLA_DARK = 842150655     # Dark charcoal / black PLA grip halves
     COLOR_PLA_GRAY = 2526451455    # Neutral gray PLA thumbplate
     COLOR_PCB_BLUE = 1728052992    # Blue sensor breakout PCB
+    COLOR_BUTTON   = 3233857791    # Brushed metal / silver button collar & cap
+    COLOR_JOY_CAP  = 505290495     # Matte black rubberized joystick thumb cap
 
     # Load cell and standoff geometric coordinates (120-degree triad)
     # Cell 0 (0 deg):
@@ -370,6 +372,42 @@ def build_grip_hybrid_minijoy_assembly(repo_root):
             "target_obj": "Analog_2_axis_Joystick_512_v5",
             "placement": (-15.98, 3.8495321897864549, 178.2283572779201506, qx, 0.0, 0.0, qw),
             "diffuse_color": COLOR_PCB_BLUE,
+        },
+        # 16. Button 1: Pointer Trigger (Half A Shell)
+        {
+            "name": "Button_Trigger",
+            "label": "Button_Trigger",
+            "file": "../../../base_frame/hardware_button_8mm.FCStd",
+            "target_obj": "Button_8mm",
+            "placement": (12.5785, 8.8186, 146.7, -0.4059200328423838, 0.5789895741179093, 0.0, 0.7071067811865476),
+            "diffuse_color": COLOR_BUTTON,
+        },
+        # 17. Button 2: Left Flanking Button (Thumb Plate)
+        {
+            "name": "Button_Left",
+            "label": "Button_Left",
+            "file": "../../../base_frame/hardware_button_8mm.FCStd",
+            "target_obj": "Button_8mm",
+            "placement": (-23.79, -7.254333717409059, 200.92564041742875, qx, 0.0, 0.0, qw),
+            "diffuse_color": COLOR_BUTTON,
+        },
+        # 18. Button 3: Right Flanking Button (Thumb Plate)
+        {
+            "name": "Button_Right",
+            "label": "Button_Right",
+            "file": "../../../base_frame/hardware_button_8mm.FCStd",
+            "target_obj": "Button_8mm",
+            "placement": (29.00, -7.254333717409059, 200.92564041742875, qx, 0.0, 0.0, qw),
+            "diffuse_color": COLOR_BUTTON,
+        },
+        # 19. Mini-Joystick Shroud / Thumbstick Cap
+        {
+            "name": "Mini_Joystick_Cap",
+            "label": "Mini_Joystick_Cap",
+            "file": "../../../base_frame/hardware_joystick_cap.FCStd",
+            "target_obj": "Joystick_Cap",
+            "placement": (3.07, -5.805444977975457, 200.53741184977497, qx, 0.0, 0.0, qw),
+            "diffuse_color": COLOR_JOY_CAP,
         },
     ]
 
