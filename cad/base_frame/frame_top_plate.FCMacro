@@ -1,0 +1,22 @@
+import FreeCAD as App, Part, math
+T, D_IN, EDGE, M4, M8 = 4.0, 14.5, 5.5, 4.5, 9.0
+HX = [5.0, 20.0]
+ANGLES = [0, 120, 240]  # Dedicated 3-cell 120-degree triad
+R = D_IN + HX[1] + EDGE
+# In-place update (Option 2): edit the part in the ACTIVE document. If no document
+# is open, fall back to creating one (standalone/headless use). Open the document
+# that holds the old part before running this macro.
+doc = App.ActiveDocument
+if doc is None:
+    doc = App.newDocument("TopPlate")
+p = Part.makeCylinder(R, T)
+for a in ANGLES:
+    for hx in HX:
+        r = D_IN + hx; t = math.radians(a)
+        p = p.cut(Part.makeCylinder(M4/2, T, App.Vector(r*math.cos(t), r*math.sin(t), 0)))
+p = p.cut(Part.makeCylinder(M8/2, T))
+obj = doc.getObject("TopPlate")
+if obj is None:
+    obj = doc.addObject("Part::Feature", "TopPlate")
+obj.Shape = p
+doc.recompute()

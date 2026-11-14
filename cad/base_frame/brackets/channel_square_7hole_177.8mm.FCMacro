@@ -1,0 +1,57 @@
+# -*- coding: utf-8 -*-
+# FreeCAD macro: square channel, 7 holes per face, 177.8 mm long
+# Run via Macro > Macros... > Execute (needs the Part workbench, included by default)
+import FreeCAD as App
+import Part
+from FreeCAD import Vector
+
+# ---- Parameters (mm) ----
+N_HOLES = 7          # holes per face
+W       = 25.4           # outer width/height
+T       = 2.0            # wall thickness
+HOLE_D  = 8.75           # hole diameter
+PITCH   = 25.4           # hole spacing
+R_OUT   = 3.0            # outer corner radius
+R_IN    = R_OUT - T      # inner corner radius (keeps wall thickness constant)
+# Stock cut midway between holes -> end margin is PITCH/2
+LENGTH  = N_HOLES * PITCH
+END     = PITCH / 2.0    # end to first hole center
+
+def rounded_tube_edges(shape):
+    """Edges running parallel to Z."""
+    return [e for e in shape.Edges
+            if abs(e.Vertexes[0].Point.x - e.Vertexes[-1].Point.x) < 1e-6
+            and abs(e.Vertexes[0].Point.y - e.Vertexes[-1].Point.y) < 1e-6]
+
+outer = Part.makeBox(W, W, LENGTH, Vector(-W/2, -W/2, 0))
+outer = outer.makeFillet(R_OUT, rounded_tube_edges(outer))
+
+wi = W - 2*T
+inner = Part.makeBox(wi, wi, LENGTH, Vector(-wi/2, -wi/2, 0))
+inner = inner.makeFillet(R_IN, rounded_tube_edges(inner))
+
+body = outer.cut(inner)
+
+# Through holes along X and Y (each passes through opposite walls)
+cutters = None
+for i in range(N_HOLES):
+    z = END + i * PITCH
+    cx = Part.makeCylinder(HOLE_D/2, 2*W, Vector(-W, 0, z), Vector(1, 0, 0))
+    cy = Part.makeCylinder(HOLE_D/2, 2*W, Vector(0, -W, z), Vector(0, 1, 0))
+    for c in (cx, cy):
+        cutters = c if cutters is None else cutters.fuse(c)
+body = body.cut(cutters).removeSplitter()
+
+doc = App.ActiveDocument or App.newDocument("SquareChannel")
+obj = doc.addObject("Part::Feature", "Channel_7Hole")
+obj.Shape = body
+doc.recompute()
+try:
+    import FreeCADGui
+    FreeCADGui.SendMsg("ViewFit")
+    FreeCADGui.activeDocument().activeView().viewIsometric()
+    FreeCADGui.SendMsg("ViewFit")
+except Exception:
+    pass
+App.Console.PrintMessage("Channel: %d holes/face, length %.1f mm, valid=%s, volume=%.1f mm3\n"
+                         % (N_HOLES, LENGTH, body.isValid(), body.Volume))

@@ -1,0 +1,11 @@
+*~
+*.FCBak
+__pycache__/
+scratch/
+build/
+datasheets/
+orders/
+*.tmp
+
+# Transient daily CAD export meshes
+cad/grips/hybrid/stl/
