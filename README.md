@@ -40,7 +40,7 @@ Mounting the joystick to your setup is **application-specific** (Varies based on
 - [3D Print Ready STLs](stl/): Clean binary STLs ready to slice for 3D printing.
 - [Neutral STEP CAD](step/): Standard STEP format models for FreeCAD, Fusion 360, SolidWorks, or Onshape.
 - [Wiring & Harness Guide](docs/wiring.md): Modular PicoBlade quick-disconnect wiring and CAT5 trunk pinout.
-- [Fasteners Specification](docs/screws.md): Exact screw lengths, M8 cut-down specs, captive nut pockets, and torque specs.
+- [Fasteners Specification](docs/screws.md): Exact screw lengths, M8 cut-down specs, captive nut pockets.
 - [Firmware](load_cell_joystick/): Complete Arduino sketch for ATmega32U4 Pro Micro with matrix decoupling and EEPROM calibration.
 
 ---
